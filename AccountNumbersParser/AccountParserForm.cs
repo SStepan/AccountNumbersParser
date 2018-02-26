@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -10,6 +11,8 @@ namespace AccountNumbersParser
     public partial class AccountParserForm : Form
     {
         private string filePath;
+        private string errorMessage = "File is not valid. Choose another file.";
+
         public AccountParserForm()
         {
             InitializeComponent();
@@ -30,26 +33,27 @@ namespace AccountNumbersParser
         {
             if (!string.IsNullOrEmpty(filePath)) {
                 StreamReader streamReader = new StreamReader(filePath);
-
                 var text = streamReader.ReadToEnd();
 
                 Regex regex = new Regex(@"[^\s_|]");
                 if (regex.IsMatch(text)) {
-                    MessageBox.Show("File is not valid. Choose another file.");
+                    MessageBox.Show(errorMessage);
                     button2.Enabled = false;
                     return;
                 }
 
                 List<string> faxNumbers = new List<string>();
-                string[] lines = text.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-                if (lines.Length % 3 != 0) {
-                    MessageBox.Show("File is not valid. Choose another file.");
+                var lines = text.Split(new string[] { "\r", "\n", "\r\n" }, StringSplitOptions.None).ToList();
+                lines.RemoveAll(t => string.IsNullOrEmpty(t));
+
+                if (lines.Count % 3 != 0) {
+                    MessageBox.Show(errorMessage);
                     button2.Enabled = false;
                     return;
                 }
                 else
                 {
-                    for (int i = 0; i < lines.Length; i = i + 3) 
+                    for (int i = 0; i < lines.Count; i = i + 3) 
                     {
                         string number = string.Empty;
                         for (int j = 0; j < 9; j++) {
